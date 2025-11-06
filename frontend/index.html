@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 리소스 모니터링 대시보드</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖥️ 시스템 리소스 모니터링 대시보드</h1>
+            <div class="timer">
+                <span id="timer">00:00</span> / 05:00
+            </div>
+        </header>
+
+        <!-- 상태 표시 -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">연결 상태:</span>
+                <span id="connection-status" class="status-value disconnected">연결 중...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">데이터 수집:</span>
+                <span id="collection-status" class="status-value">대기 중</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">샘플 수:</span>
+                <span id="sample-count" class="status-value">0</span>
+            </div>
+        </div>
+
+        <!-- 게이지 차트 영역 -->
+        <div class="gauge-section">
+            <div class="gauge-card">
+                <h3>CPU 사용률</h3>
+                <div class="gauge-container">
+                    <canvas id="cpu-gauge"></canvas>
+                </div>
+                <div class="gauge-info">
+                    <div class="info-item">
+                        <span class="info-label">현재:</span>
+                        <span id="cpu-current" class="info-value">0%</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">온도:</span>
+                        <span id="cpu-temp" class="info-value">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gauge-card">
+                <h3>메모리 사용률</h3>
+                <div class="gauge-container">
+                    <canvas id="memory-gauge"></canvas>
+                </div>
+                <div class="gauge-info">
+                    <div class="info-item">
+                        <span class="info-label">현재:</span>
+                        <span id="memory-current" class="info-value">0%</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">사용량:</span>
+                        <span id="memory-used" class="info-value">0 GB / 0 GB</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gauge-card" id="gpu-card" style="display: none;">
+                <h3>GPU 사용률</h3>
+                <div class="gauge-container">
+                    <canvas id="gpu-gauge"></canvas>
+                </div>
+                <div class="gauge-info">
+                    <div class="info-item">
+                        <span class="info-label">현재:</span>
+                        <span id="gpu-current" class="info-value">0%</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">온도:</span>
+                        <span id="gpu-temp" class="info-value">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gauge-card">
+                <h3>디스크 사용률</h3>
+                <div class="gauge-container">
+                    <canvas id="disk-gauge"></canvas>
+                </div>
+                <div class="gauge-info">
+                    <div class="info-item">
+                        <span class="info-label">현재:</span>
+                        <span id="disk-current" class="info-value">0%</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">용량:</span>
+                        <span id="disk-space" class="info-value">0 GB / 0 GB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 그래프 영역 -->
+        <div class="chart-section">
+            <div class="chart-card">
+                <h3>📈 CPU 사용률 추이</h3>
+                <canvas id="cpu-chart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h3>📈 메모리 사용률 추이</h3>
+                <canvas id="memory-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-card">
+                <h3>📊 네트워크 속도</h3>
+                <canvas id="network-chart"></canvas>
+                <div class="network-info">
+                    <div class="info-item">
+                        <span class="label">⬆️ 업로드:</span>
+                        <span id="network-upload" class="value">0 MB/s</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">⬇️ 다운로드:</span>
+                        <span id="network-download" class="value">0 MB/s</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card" id="temp-chart-card" style="display: none;">
+                <h3>🌡️ 온도 추이</h3>
+                <canvas id="temp-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- 프로세스 테이블 -->
+        <div class="process-section">
+            <div class="process-card">
+                <h3>🔥 CPU 사용 상위 프로세스</h3>
+                <table id="cpu-process-table">
+                    <thead>
+                        <tr>
+                            <th>순위</th>
+                            <th>프로세스명</th>
+                            <th>PID</th>
+                            <th>CPU (%)</th>
+                            <th>메모리 (MB)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5">데이터 수집 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="process-card">
+                <h3>💾 메모리 사용 상위 프로세스</h3>
+                <table id="memory-process-table">
+                    <thead>
+                        <tr>
+                            <th>순위</th>
+                            <th>프로세스명</th>
+                            <th>PID</th>
+                            <th>메모리 (%)</th>
+                            <th>메모리 (MB)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5">데이터 수집 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 완료 메시지 -->
+        <div id="completion-message" class="completion-message" style="display: none;">
+            <h2>✅ 모니터링 완료!</h2>
+            <p>PDF 리포트가 생성되었습니다.</p>
+            <p class="report-path">경로: <span id="report-path"></span></p>
+        </div>
+
+        <footer>
+            <p>System Resource Monitor v1.0 | 실시간 모니터링 중</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
